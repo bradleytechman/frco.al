@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<div style="text-align:center; background:#eee; padding:20px;">
+  <h1>
+    <img src="https://frco.al/frcoal.png" style="vertical-align:middle; height:40px;">frco.al
+  </h1>
+  
+  <div style="background:#ddd; padding:10px; display:inline-block;">
+    The directory for all 
+    <img src="https://frco.al/frcoal.png" style="height:20px; vertical-align:middle;">
+    <img src="https://frco.al/fr.png" style="height:20px; vertical-align:middle;">
+    images.
+  </div>
+  
+  <div style="margin-top:15px;">
+    <a href="https://github.com/bradleytechman/frco.al"><button>Source</button></a>
+    <a href="mailto:me@bradley.rocks?subject=Inquiry%20regarding%20%22frco.al%22%3A%20%5BINSERT%20SUBJECT%20HERE%5D"><button>Contact</button></a>
+    <a href="https://forms.gle"><button>Submit a new one!</button></a>
+  </div>
+</div>
+
+<div style="text-align:center; padding:10px;">
+  <button onclick="filterCategory('all')">All</button>
+  <button onclick="filterCategory('frcoal')">frcoal</button>
+  <button onclick="filterCategory('fr')">fr</button>
+  <button onclick="filterCategory('other ones')">other ones</button>
+</div>
+
+<div id="gallery" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:12px; padding:20px; max-width:1200px; margin:0 auto;"></div>
+
+<script>
+const repo = "bradleytechman/frco.al";
+const base = "https://api.github.com/repos/" + repo + "/contents/assets";
+
+let allItems = [];
+
+async function loadFolder(path, category) {
+  const res = await fetch(base + "/" + path);
+  const data = await res.json();
+
+  data.forEach(file => {
+    if (file.type === "file") {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (["png","jpg","jpeg","gif","webp"].includes(ext)) {
+        allItems.push({
+          url: file.download_url,
+          name: file.name,
+          category
+        });
+      }
+    }
+  });
+}
+
+async function init() {
+  await Promise.all([
+    loadFolder("frcoal", "frcoal"),
+    loadFolder("fr", "fr"),
+    loadFolder("other ones", "other ones")
+  ]);
+  render("all");
+}
+
+function render(cat) {
+  const gallery = document.getElementById("gallery");
+  gallery.innerHTML = "";
+
+  allItems.forEach(item => {
+    if (cat !== "all" && item.category !== cat) return;
+
+    const a = document.createElement("a");
+    a.href = item.url;
+    a.title = item.name;
+
+    const img = document.createElement("img");
+    img.src = item.url;
+    img.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px;";
+
+    a.appendChild(img);
+    gallery.appendChild(a);
+  });
+}
+
+function filterCategory(cat) {
+  render(cat);
+}
+
+init();
+</script>
+
+</body>
+</html>
