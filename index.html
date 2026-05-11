@@ -21,14 +21,14 @@
   <h1>
     <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/frcoal/frcoal.png" style="vertical-align:middle; height:40px;">frco.al
   </h1>
-  
+
   <div style="background:#ddd; padding:10px; display:inline-block;">
-    The directory for all 
+    The directory for all
     <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/frcoal/frcoal.png" style="height:20px; vertical-align:middle;">
     <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/fr/fr.png" style="height:20px; vertical-align:middle;">
     images.
   </div>
-  
+
   <div style="margin-top:15px;">
     <a href="https://github.com/bradleytechman/frco.al"><button>Source</button></a>
     <a href="mailto:me@bradley.rocks?subject=Inquiry%20regarding%20%22frco.al%22%3A%20%5BINSERT%20SUBJECT%20HERE%5D"><button>Contact</button></a>
@@ -57,12 +57,13 @@ async function loadFolder(path, category) {
 
   data.forEach(file => {
     if (file.type === "file") {
-      const ext = file.name.split('.').pop().toLowerCase();
-      if (["png","jpg","jpeg","gif","webp"].includes(ext)) {
+      const ext = file.name.split(".").pop().toLowerCase();
+      if (["png", "jpg", "jpeg", "gif", "webp", "mp4"].includes(ext)) {
         allItems.push({
           url: file.download_url,
           name: file.name,
-          category
+          category,
+          ext
         });
       }
     }
@@ -89,11 +90,25 @@ function render(cat) {
     a.href = item.url;
     a.title = item.name;
 
-    const img = document.createElement("img");
-    img.src = item.url;
-    img.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px;";
+    if (item.ext === "mp4") {
+      const video = document.createElement("video");
+      video.src = item.url;
+      video.muted = true;
+      video.autoplay = true;
+      video.loop = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      video.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;";
 
-    a.appendChild(img);
+      a.appendChild(video);
+    } else {
+      const img = document.createElement("img");
+      img.src = item.url;
+      img.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;";
+
+      a.appendChild(img);
+    }
+
     gallery.appendChild(a);
   });
 }
