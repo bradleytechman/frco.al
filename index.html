@@ -3,68 +3,58 @@
 <head>
   <meta charset="utf-8">
   <title>frco.al</title>
-
   <meta property="og:title" content="frco.al">
   <meta property="og:description" content="Database of fr/frcoal images">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://frco.al/">
   <meta property="og:image" content="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/misc/frfr.png">
-
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="frco.al">
   <meta name="twitter:description" content="Database of fr/frcoal images">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/misc/frfr.png">
+  <style>
+    .tooltip { position:absolute; background:#333; color:#fff; padding:2px 6px; font-size:12px; border-radius:3px; pointer-events:none; display:none; z-index:100; white-space:nowrap; }
+  </style>
 </head>
 <body>
-
 <div style="text-align:center; background:#eee; padding:20px;">
-  <h1>
-    <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/frcoal/frcoal.png" style="vertical-align:middle; height:40px;">frco.al
-  </h1>
-
+  <h1><img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/frcoal/frcoal.png" style="vertical-align:middle; height:40px;">frco.al</h1>
   <div style="background:#ddd; padding:10px; display:inline-block;">
-    The directory for all
+    The directory for all 
     <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/frcoal/frcoal.png" style="height:20px; vertical-align:middle;">
     <img src="https://raw.githubusercontent.com/bradleytechman/frco.al/main/assets/fr/fr.png" style="height:20px; vertical-align:middle;">
     images.
   </div>
-
   <div style="margin-top:15px;">
     <a href="https://github.com/bradleytechman/frco.al"><button>Source</button></a>
     <a href="mailto:me@bradley.rocks?subject=Inquiry%20regarding%20%22frco.al%22%3A%20%5BINSERT%20SUBJECT%20HERE%5D"><button>Contact</button></a>
-    <a href="https://github.com/bradleytechman/frco.al/compare"><button>Submit a new one! (PR now because google form was annoying)</button></a>
+    <a href="https://github.com/bradleytechman/frco.al/compare"><button>Submit a new one!</button></a>
   </div>
 </div>
 
 <div style="text-align:center; padding:10px;">
-  <button onclick="filterCategory('all')">All</button>
-  <button onclick="filterCategory('frcoal')">frcoal</button>
-  <button onclick="filterCategory('fr')">fr</button>
-  <button onclick="filterCategory('other ones')">other ones</button>
+  <button onclick="filterCategory('all')">All (<span id="c_all">0</span>)</button>
+  <button onclick="filterCategory('frcoal')">frcoal (<span id="c_frcoal">0</span>)</button>
+  <button onclick="filterCategory('fr')">fr (<span id="c_fr">0</span>)</button>
+  <button onclick="filterCategory('other ones')">other ones (<span id="c_other">0</span>)</button>
 </div>
 
 <div id="gallery" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:12px; padding:20px; max-width:1200px; margin:0 auto;"></div>
+<div id="tooltip" class="tooltip"></div>
 
 <script>
 const repo = "bradleytechman/frco.al";
 const base = "https://api.github.com/repos/" + repo + "/contents/assets";
-
 let allItems = [];
 
 async function loadFolder(path, category) {
   const res = await fetch(base + "/" + path);
   const data = await res.json();
-
   data.forEach(file => {
     if (file.type === "file") {
       const ext = file.name.split(".").pop().toLowerCase();
       if (["png", "jpg", "jpeg", "gif", "webp", "mp4"].includes(ext)) {
-        allItems.push({
-          url: file.download_url,
-          name: file.name,
-          category,
-          ext
-        });
+        allItems.push({url: file.download_url, name: file.name, category, ext});
       }
     }
   });
@@ -76,49 +66,70 @@ async function init() {
     loadFolder("fr", "fr"),
     loadFolder("other ones", "other ones")
   ]);
+  updateCounts();
   render("all");
+}
+
+function updateCounts() {
+  let all = allItems.length;
+  let frcoal = 0, fr = 0, other = 0;
+  
+  allItems.forEach(item => {
+    if (item.category === "frcoal") frcoal++;
+    else if (item.category === "fr") fr++;
+    else if (item.category === "other ones") other++;
+  });
+
+  document.getElementById('c_all').textContent = all;
+  document.getElementById('c_frcoal').textContent = frcoal;
+  document.getElementById('c_fr').textContent = fr;
+  document.getElementById('c_other').textContent = other;
 }
 
 function render(cat) {
   const gallery = document.getElementById("gallery");
   gallery.innerHTML = "";
-
   allItems.forEach(item => {
     if (cat !== "all" && item.category !== cat) return;
-
     const a = document.createElement("a");
     a.href = item.url;
-    a.title = item.name;
-
+    a.style.position = "relative";
     if (item.ext === "mp4") {
       const video = document.createElement("video");
       video.src = item.url;
-      video.muted = true;
-      video.autoplay = true;
-      video.loop = true;
-      video.playsInline = true;
-      video.preload = "metadata";
+      video.muted = true; video.autoplay = true; video.loop = true; video.playsInline = true;
+      video.preload = "metadata"; video.loading = "lazy";
       video.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;";
-
       a.appendChild(video);
     } else {
       const img = document.createElement("img");
       img.src = item.url;
+      img.loading = "lazy";
       img.style = "width:100%; height:auto; border:1px solid #ccc; border-radius:4px; display:block;";
-
       a.appendChild(img);
     }
-
+    a.onmouseenter = () => showTooltip(item.name, a);
     gallery.appendChild(a);
   });
 }
 
-function filterCategory(cat) {
-  render(cat);
+let tooltip = document.getElementById("tooltip");
+function showTooltip(text, el) {
+  tooltip.textContent = text;
+  tooltip.style.display = "block";
+  function move(e) {
+    tooltip.style.left = (e.pageX + 12) + "px";
+    tooltip.style.top = (e.pageY + 12) + "px";
+  }
+  document.addEventListener("mousemove", move);
+  el.onmouseleave = () => { 
+    tooltip.style.display="none"; 
+    document.removeEventListener("mousemove", move); 
+  };
 }
 
+function filterCategory(cat) { render(cat); }
 init();
 </script>
-
 </body>
 </html>
